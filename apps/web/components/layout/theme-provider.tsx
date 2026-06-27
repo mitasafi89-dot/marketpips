@@ -1,9 +1,5 @@
-'use client'
-
-// components/layout/theme-provider.tsx
-import { ThemeProvider as NextThemesProvider } from 'next-themes'
-import type { ThemeProviderProps } from 'next-themes/dist/types'
-
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+// theme-provider.tsx — lightweight, no next-themes dep needed
+// Dark mode is set via 'dark' class on <html> in layout.tsx
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  return <>{children}</>
 }

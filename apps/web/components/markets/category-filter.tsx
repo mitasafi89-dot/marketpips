@@ -1,53 +1,78 @@
 'use client'
 
-// components/markets/category-filter.tsx
-import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
-import type { MarketCategory } from '@/types'
+import { useRef } from 'react'
 import { CATEGORY_LABELS } from '@/types'
+import { IconChevronLeft, IconChevronRight } from '@/components/ui/icons'
 
-const ALL_CATEGORIES: Array<{ value: string; label: string; emoji: string }> = [
-  { value: '', label: 'All', emoji: '🌐' },
-  ...Object.entries(CATEGORY_LABELS).map(([value, info]) => ({
-    value,
-    label: info.label,
-    emoji: info.emoji,
-  })),
+const CATEGORIES = [
+  { key: 'all', emoji: '⚡', label: 'All' },
+  ...Object.entries(CATEGORY_LABELS).map(([key, val]) => ({ key, ...val })),
 ]
 
-export function CategoryFilter() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const activeCategory = searchParams.get('category') || ''
+interface CategoryFilterProps {
+  selected: string
+  onChange: (cat: string) => void
+  counts?: Record<string, number>
+}
 
-  const handleCategory = (category: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    if (category) {
-      params.set('category', category)
-    } else {
-      params.delete('category')
-    }
-    router.push(`${pathname}?${params.toString()}`)
+export function CategoryFilter({ selected, onChange, counts = {} }: CategoryFilterProps) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const scroll = (dir: 'left' | 'right') => {
+    scrollRef.current?.scrollBy({ left: dir === 'left' ? -160 : 160, behavior: 'smooth' })
   }
 
   return (
-    <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide">
-      {ALL_CATEGORIES.map(({ value, label, emoji }) => (
-        <button
-          key={value}
-          onClick={() => handleCategory(value)}
-          className={cn(
-            'flex-none flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap',
-            activeCategory === value
-              ? 'bg-primary text-primary-foreground'
-              : 'border hover:bg-muted text-muted-foreground hover:text-foreground'
-          )}
-        >
-          <span>{emoji}</span>
-          <span>{label}</span>
-        </button>
-      ))}
+    <div className="relative flex items-center gap-1">
+      {/* Left arrow */}
+      <button
+        onClick={() => scroll('left')}
+        className="hidden sm:flex flex-shrink-0 w-7 h-7 items-center justify-center rounded-lg transition-colors"
+        style={{ background: 'var(--bg-tertiary)', color: 'var(--text-muted)' }}
+      >
+        <IconChevronLeft size={14} />
+      </button>
+
+      {/* Scrollable pills */}
+      <div
+        ref={scrollRef}
+        className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1"
+      >
+        {CATEGORIES.map(cat => {
+          const count = counts[cat.key]
+          const active = selected === cat.key
+          return (
+            <button
+              key={cat.key}
+              onClick={() => onChange(cat.key)}
+              className={`tab-pill flex-shrink-0 flex items-center gap-1.5 ${active ? 'active' : ''}`}
+            >
+              <span>{cat.emoji}</span>
+              <span>{cat.label}</span>
+              {count !== undefined && count > 0 && (
+                <span
+                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-0.5"
+                  style={{
+                    background: active ? 'rgba(34,197,94,0.2)' : 'var(--bg-tertiary)',
+                    color: active ? 'var(--green)' : 'var(--text-muted)',
+                  }}
+                >
+                  {count}
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Right arrow */}
+      <button
+        onClick={() => scroll('right')}
+        className="hidden sm:flex flex-shrink-0 w-7 h-7 items-center justify-center rounded-lg transition-colors"
+        style={{ background: 'var(--bg-tertiary)', color: 'var(--text-muted)' }}
+      >
+        <IconChevronRight size={14} />
+      </button>
     </div>
   )
 }

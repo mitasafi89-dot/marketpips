@@ -1,207 +1,400 @@
 'use client'
 
-// components/layout/navbar.tsx
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useState } from 'react'
-import { Menu, X, Bell, Wallet, LogOut, User, Settings, ChevronDown } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
 import { useWallets } from '@/hooks/use-wallets'
-import { DepositModal } from '@/components/payments/deposit-modal'
-import WithdrawModal from '@/components/payments/withdraw-modal'
-import { cn } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
+import { CURRENCIES } from '@/types'
+import {
+  LogoMark,
+  IconSearch, IconBell, IconUser, IconMenu, IconX,
+  IconWallet, IconDeposit, IconWithdraw, IconPortfolio,
+  IconSettings, IconLogOut, IconLeaderboard, IconShield,
+  IconMarkets, IconChevronDown, IconTrophy,
+} from '@/components/ui/icons'
 
 export function Navbar() {
-  const { user, profile, isLoading, signOut } = useAuth()
-  const { totalBalanceUsd } = useWallets()
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [depositOpen, setDepositOpen] = useState(false)
-  const [withdrawOpen, setWithdrawOpen] = useState(false)
+  const pathname = usePathname()
+  const router = useRouter()
+  const { user, loading } = useAuth()
+  const { wallets, preferredCurrency } = useWallets()
+  const supabase = createClient()
+
+  const [menuOpen, setMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [depositOpen, setDepositOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  const wallet = wallets.find(w => w.currency === preferredCurrency)
+  const balance = wallet?.available_balance ?? 0
+  const currencyInfo = CURRENCIES[preferredCurrency]
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    if (searchOpen) setTimeout(() => searchRef.current?.focus(), 50)
+  }, [searchOpen])
+
+  // Close mobile menu on navigation
+  useEffect(() => { setMenuOpen(false) }, [pathname])
+
+  const signOut = async () => {
+    await supabase.auth.signOut()
+    router.push('/')
+    router.refresh()
+  }
+
+  const navLinks = [
+    { href: '/markets', label: 'Markets', icon: <IconMarkets size={15}/> },
+    { href: '/leaderboard', label: 'Leaders', icon: <IconTrophy size={15}/> },
+  ]
+
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
 
   return (
     <>
-      <nav className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-xl">
-        <div className="container mx-auto px-4 max-w-7xl">
-          <div className="flex h-16 items-center justify-between">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 font-black text-xl">
-              <span className="text-2xl">🎯</span>
-              <span>MarketPips</span>
-            </Link>
+      <nav className={`navbar transition-shadow ${scrolled ? 'shadow-lg' : ''}`}>
+        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-3">
 
-            {/* Desktop nav */}
-            <div className="hidden md:flex items-center gap-6 text-sm font-medium">
-              <Link href="/markets" className="text-muted-foreground hover:text-foreground transition-colors">
-                Markets
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 mr-2 flex-shrink-0">
+            <LogoMark size={28} />
+            <span className="font-display text-[15px] font-bold tracking-tight text-white hidden xs:block">
+              MarketPips
+            </span>
+          </Link>
+
+          {/* Desktop nav links */}
+          <div className="hidden md:flex items-center gap-1">
+            {navLinks.map(link => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all ${
+                  isActive(link.href)
+                    ? 'bg-[rgba(34,197,94,0.15)] text-green-light'
+                    : 'text-[var(--text-secondary)] hover:text-white hover:bg-[var(--bg-tertiary)]'
+                }`}
+              >
+                {link.icon}{link.label}
               </Link>
-              <Link href="/leaderboard" className="text-muted-foreground hover:text-foreground transition-colors">
-                Leaderboard
-              </Link>
-              {user && (
-                <>
-                  <Link href="/portfolio" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Portfolio
-                  </Link>
-                  <Link href="/markets/create" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Create
-                  </Link>
-                </>
-              )}
-            </div>
+            ))}
+          </div>
 
-            {/* Right side */}
-            <div className="flex items-center gap-2">
-              {isLoading ? (
-                <div className="h-8 w-24 skeleton rounded-lg" />
-              ) : user ? (
-                <>
-                  {/* Add funds button */}
-                  <button
-                    onClick={() => setDepositOpen(true)}
-                    className="hidden sm:flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                  >
-                    <Wallet className="w-4 h-4" />
-                    Add Funds
-                  </button>
+          {/* Search bar — desktop */}
+          <div className="hidden md:flex flex-1 max-w-xs mx-2">
+            <button
+              onClick={() => router.push('/search')}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-muted)] text-sm hover:border-[var(--border-hover)] transition-colors"
+            >
+              <IconSearch size={14} />
+              <span>Search markets…</span>
+              <span className="ml-auto text-xs border border-[var(--border)] rounded px-1 py-0.5 font-mono">/</span>
+            </button>
+          </div>
 
-                  {/* Balance display */}
-                  <div className="hidden sm:block text-sm">
-                    <span className="text-muted-foreground">~</span>
-                    <span className="font-medium">${totalBalanceUsd.toFixed(2)}</span>
-                  </div>
+          {/* Right side */}
+          <div className="flex items-center gap-2 ml-auto">
 
-                  {/* Withdraw button */}
-                  <button
-                    onClick={() => setWithdrawOpen(true)}
-                    className="hidden sm:flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-xl border hover:bg-muted transition-colors"
-                  >
-                    💸 Withdraw
-                  </button>
+            {/* Search icon — mobile */}
+            <button
+              className="md:hidden btn-ghost p-2 rounded-lg"
+              onClick={() => router.push('/search')}
+              aria-label="Search"
+            >
+              <IconSearch size={18} className="text-[var(--text-secondary)]" />
+            </button>
 
-                  {/* Notifications */}
-                  <Link href="/notifications" className="relative p-2 rounded-xl hover:bg-muted transition-colors">
-                    <Bell className="w-4 h-4" />
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
-                  </Link>
-
-                  {/* User menu */}
-                  <div className="relative">
+            {!loading && (
+              <>
+                {user ? (
+                  <>
+                    {/* Wallet balance chip */}
                     <button
-                      onClick={() => setUserMenuOpen(!userMenuOpen)}
-                      className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl hover:bg-muted transition-colors"
+                      onClick={() => setDepositOpen(true)}
+                      className="wallet-chip hidden sm:flex"
+                      title="Deposit funds"
                     >
-                      <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
-                        {profile?.display_name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || '?'}
-                      </div>
-                      <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                      <IconWallet size={13} />
+                      <span className="font-mono">
+                        {currencyInfo?.symbol}{balance.toLocaleString()}
+                      </span>
+                      <span className="text-[10px] opacity-70">{preferredCurrency}</span>
                     </button>
 
-                    {userMenuOpen && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-40"
-                          onClick={() => setUserMenuOpen(false)}
-                        />
-                        <div className="absolute right-0 top-full mt-1 w-48 rounded-xl border bg-card shadow-lg z-50 overflow-hidden">
-                          <div className="p-3 border-b">
-                            <p className="font-medium text-sm truncate">
-                              {profile?.display_name || 'Anonymous'}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                          </div>
-                          <Link href="/portfolio" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted" onClick={() => setUserMenuOpen(false)}>
-                            <User className="w-4 h-4" /> Portfolio
-                          </Link>
-                          <Link href="/profile" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted" onClick={() => setUserMenuOpen(false)}>
-                            👤 My Profile
-                          </Link>
-                          <Link href="/notifications" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted" onClick={() => setUserMenuOpen(false)}>
-                            🔔 Notifications
-                          </Link>
-                          <Link href="/kyc" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted" onClick={() => setUserMenuOpen(false)}>
-                            🪪 Verify Identity
-                          </Link>
-                          <Link href="/settings" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted" onClick={() => setUserMenuOpen(false)}>
-                            <Settings className="w-4 h-4" /> Settings
-                          </Link>
-                          {profile?.role === 'admin' && (
-                            <Link href="/admin" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-primary" onClick={() => setUserMenuOpen(false)}>
-                              ⚙️ Admin Panel
-                            </Link>
-                          )}
-                          <button
-                            onClick={() => { signOut(); setUserMenuOpen(false) }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-destructive"
-                          >
-                            <LogOut className="w-4 h-4" /> Sign Out
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Link href="/auth/login" className="text-sm font-medium px-3 py-1.5 rounded-xl hover:bg-muted transition-colors">
-                    Sign In
-                  </Link>
-                  <Link href="/auth/register" className="text-sm font-medium px-3 py-1.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-                    Get Started
-                  </Link>
-                </div>
-              )}
+                    {/* Notifications */}
+                    <Link
+                      href="/notifications"
+                      className="relative p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors"
+                      aria-label="Notifications"
+                    >
+                      <IconBell size={17} className="text-[var(--text-secondary)]" />
+                      <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-green-light rounded-full animate-pulse-dot" />
+                    </Link>
 
-              {/* Mobile menu toggle */}
-              <button
-                className="md:hidden p-2 rounded-xl hover:bg-muted"
-                onClick={() => setMobileOpen(!mobileOpen)}
-              >
-                {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
-            </div>
+                    {/* User menu */}
+                    <div className="relative" ref={menuRef}>
+                      <button
+                        onClick={() => setUserMenuOpen(v => !v)}
+                        className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors"
+                      >
+                        <div className="avatar text-white">
+                          {(user.email?.[0] ?? 'U').toUpperCase()}
+                        </div>
+                        <IconChevronDown size={13} className="text-[var(--text-muted)] hidden sm:block" />
+                      </button>
+
+                      {userMenuOpen && (
+                        <div className="dropdown animate-scale-in" style={{ minWidth: 220 }}>
+                          {/* Header */}
+                          <div className="px-4 py-3 border-b border-[var(--border)]">
+                            <p className="text-xs text-[var(--text-muted)]">Signed in as</p>
+                            <p className="text-sm font-semibold truncate text-[var(--text-primary)]">{user.email}</p>
+                          </div>
+
+                          {/* Wallet (mobile) */}
+                          <div className="sm:hidden px-4 py-2 border-b border-[var(--border)]">
+                            <p className="text-xs text-[var(--text-muted)] mb-1">Balance</p>
+                            <p className="font-mono font-bold text-green-light">
+                              {currencyInfo?.symbol}{balance.toLocaleString()} {preferredCurrency}
+                            </p>
+                          </div>
+
+                          <div className="py-1">
+                            <button onClick={() => { setDepositOpen(true); setUserMenuOpen(false) }} className="dropdown-item w-full">
+                              <IconDeposit size={15} /><span>Deposit</span>
+                            </button>
+                            <Link href="/portfolio" className="dropdown-item" onClick={() => setUserMenuOpen(false)}>
+                              <IconPortfolio size={15} /><span>Portfolio</span>
+                            </Link>
+                            <Link href="/profile" className="dropdown-item" onClick={() => setUserMenuOpen(false)}>
+                              <IconUser size={15} /><span>Profile</span>
+                            </Link>
+                            <Link href="/kyc" className="dropdown-item" onClick={() => setUserMenuOpen(false)}>
+                              <IconShield size={15} /><span>Verify Identity</span>
+                            </Link>
+                            <Link href="/settings" className="dropdown-item" onClick={() => setUserMenuOpen(false)}>
+                              <IconSettings size={15} /><span>Settings</span>
+                            </Link>
+                          </div>
+
+                          <div className="py-1 border-t border-[var(--border)]">
+                            <button onClick={signOut} className="dropdown-item danger w-full">
+                              <IconLogOut size={15} /><span>Sign out</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Link href="/auth/login" className="btn btn-ghost btn-sm text-white">Sign in</Link>
+                    <Link href="/auth/register" className="btn btn-primary btn-sm">Get started</Link>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Mobile hamburger */}
+            <button
+              className="md:hidden p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors"
+              onClick={() => setMenuOpen(v => !v)}
+              aria-label="Menu"
+            >
+              {menuOpen
+                ? <IconX size={18} className="text-white" />
+                : <IconMenu size={18} className="text-[var(--text-secondary)]" />
+              }
+            </button>
           </div>
         </div>
 
         {/* Mobile menu */}
-        {mobileOpen && (
-          <div className="md:hidden border-t bg-background px-4 py-3 space-y-1">
-            <Link href="/markets" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>
-              Markets
-            </Link>
-            <Link href="/leaderboard" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>
-              Leaderboard
-            </Link>
-            {user ? (
-              <>
-                <Link href="/portfolio" className="block py-2 text-sm font-medium" onClick={() => setMobileOpen(false)}>
-                  Portfolio
-                </Link>
-                <button
-                  onClick={() => { setDepositOpen(true); setMobileOpen(false) }}
-                  className="w-full text-left py-2 text-sm font-medium text-primary"
+        {menuOpen && (
+          <div className="md:hidden border-t border-[var(--border)] bg-[var(--bg-secondary)] animate-fade-in">
+            <div className="max-w-7xl mx-auto px-4 py-3 space-y-1">
+              {navLinks.map(link => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    isActive(link.href)
+                      ? 'bg-[rgba(34,197,94,0.12)] text-green-light'
+                      : 'text-[var(--text-secondary)]'
+                  }`}
                 >
-                  💰 Add Funds
-                </button>
-              </>
-            ) : (
-              <Link href="/auth/login" className="block py-2 text-sm font-medium text-primary" onClick={() => setMobileOpen(false)}>
-                Sign In
-              </Link>
-            )}
+                  {link.icon}{link.label}
+                </Link>
+              ))}
+              {user && (
+                <>
+                  <Link href="/portfolio" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--text-secondary)]">
+                    <IconPortfolio size={15} />Portfolio
+                  </Link>
+                  <Link href="/notifications" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[var(--text-secondary)]">
+                    <IconBell size={15} />Notifications
+                  </Link>
+                  <div className="pt-2 border-t border-[var(--border)]">
+                    <button
+                      onClick={() => { setDepositOpen(true); setMenuOpen(false) }}
+                      className="w-full btn btn-primary btn-sm mb-2"
+                    >
+                      <IconDeposit size={14} /> Deposit Funds
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
       </nav>
 
-      <DepositModal isOpen={depositOpen} onClose={() => setDepositOpen(false)} />
-      {withdrawOpen && (
-        <div className="modal modal-open">
-          <div className="modal-box">
-            <button className="btn btn-ghost btn-sm btn-circle absolute right-2 top-2" onClick={() => setWithdrawOpen(false)}>✕</button>
-            <WithdrawModal onClose={() => setWithdrawOpen(false)} />
-          </div>
-          <div className="modal-backdrop" onClick={() => setWithdrawOpen(false)} />
-        </div>
+      {/* Deposit modal placeholder — swap for real modal */}
+      {depositOpen && (
+        <DepositSheet onClose={() => setDepositOpen(false)} />
       )}
     </>
+  )
+}
+
+// Inline deposit sheet (lightweight, no heavy modal lib)
+function DepositSheet({ onClose }: { onClose: () => void }) {
+  const { preferredCurrency } = useWallets()
+  const [amount, setAmount] = useState('')
+  const [phone, setPhone] = useState('')
+  const [step, setStep] = useState<'form' | 'loading' | 'success'>('form')
+
+  const submit = async () => {
+    if (!amount || !phone) return
+    setStep('loading')
+    try {
+      const res = await fetch('/api/payments/deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: parseFloat(amount), currency: preferredCurrency, phone_number: phone, provider: 'mpesa' }),
+      })
+      const data = await res.json()
+      if (data.success || data.checkout_request_id) setStep('success')
+      else setStep('form')
+    } catch { setStep('form') }
+  }
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-sheet animate-slide-up">
+        {/* Handle */}
+        <div className="w-10 h-1 bg-[var(--border)] rounded-full mx-auto mb-5" />
+
+        {step === 'success' ? (
+          <div className="text-center py-6">
+            <div className="w-16 h-16 rounded-full bg-[var(--green-dim)] flex items-center justify-center mx-auto mb-4">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <h3 className="font-display text-xl mb-2" style={{ color: 'var(--text-primary)' }}>Check your phone</h3>
+            <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
+              An M-Pesa push has been sent to <strong>{phone}</strong>. Enter your PIN to complete.
+            </p>
+            <button className="btn btn-primary btn-lg w-full" onClick={onClose}>Done</button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-display text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Deposit Funds</h3>
+                <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>Instant via M-Pesa · MTN · Airtel</p>
+              </div>
+              <button onClick={onClose} className="btn-ghost p-2 rounded-lg">
+                <IconX size={18} className="text-[var(--text-muted)]" />
+              </button>
+            </div>
+
+            {/* Quick amounts */}
+            <div className="mb-4">
+              <label className="text-xs font-semibold uppercase tracking-wide mb-2 block" style={{ color: 'var(--text-muted)' }}>Amount (KES)</label>
+              <div className="grid grid-cols-4 gap-2 mb-3">
+                {['500', '1000', '2000', '5000'].map(v => (
+                  <button
+                    key={v}
+                    onClick={() => setAmount(v)}
+                    className={`py-2 rounded-lg text-sm font-semibold border transition-all ${
+                      amount === v
+                        ? 'bg-[var(--green)] text-white border-[var(--green)]'
+                        : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--green)]'
+                    }`}
+                    style={{ background: amount === v ? undefined : 'var(--bg-tertiary)' }}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+              <input
+                className="input input-lg"
+                type="number"
+                placeholder="Or enter amount…"
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+              />
+            </div>
+
+            <div className="mb-5">
+              <label className="text-xs font-semibold uppercase tracking-wide mb-2 block" style={{ color: 'var(--text-muted)' }}>Phone Number</label>
+              <input
+                className="input"
+                type="tel"
+                placeholder="+254 700 000 000"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+              />
+            </div>
+
+            <button
+              className="btn btn-primary btn-lg w-full"
+              onClick={submit}
+              disabled={step === 'loading' || !amount || !phone}
+            >
+              {step === 'loading' ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                  </svg>
+                  Sending push…
+                </span>
+              ) : (
+                <>
+                  <IconDeposit size={16} />
+                  Pay {amount ? `KES ${parseInt(amount).toLocaleString()}` : 'Now'}
+                </>
+              )}
+            </button>
+
+            <p className="text-center text-xs mt-4" style={{ color: 'var(--text-muted)' }}>
+              Secured by Safaricom · MTN · Airtel encryption
+            </p>
+          </>
+        )}
+      </div>
+    </div>
   )
 }

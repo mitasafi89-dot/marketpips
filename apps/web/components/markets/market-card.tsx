@@ -1,96 +1,119 @@
-// components/markets/market-card.tsx
+'use client'
+
 import Link from 'next/link'
-import { Clock, Users, TrendingUp } from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
 import type { Market } from '@/types'
 import { CATEGORY_LABELS } from '@/types'
-import { cn } from '@/lib/utils'
+import { IconClock, IconUser, IconTrendUp, IconTrendDown } from '@/components/ui/icons'
 
 interface MarketCardProps {
   market: Market
-  featured?: boolean
   compact?: boolean
 }
 
-export function MarketCard({ market, featured = false, compact = false }: MarketCardProps) {
-  const categoryInfo = CATEGORY_LABELS[market.category]
-  const isClosingSoon = new Date(market.closes_at).getTime() - Date.now() < 24 * 60 * 60 * 1000
-  const timeLeft = formatDistanceToNow(new Date(market.closes_at), { addSuffix: true })
+function timeLeft(closes: string) {
+  const ms = new Date(closes).getTime() - Date.now()
+  if (ms < 0) return 'Closed'
+  const d = Math.floor(ms / 86400000)
+  const h = Math.floor((ms % 86400000) / 3600000)
+  if (d > 0) return `${d}d ${h}h`
+  const m = Math.floor((ms % 3600000) / 60000)
+  if (h > 0) return `${h}h ${m}m`
+  return `${m}m`
+}
 
-  const yesPercent = Math.round(market.yes_price * 100)
-  const noPercent = 100 - yesPercent
+export function MarketCard({ market, compact = false }: MarketCardProps) {
+  const cat = CATEGORY_LABELS[market.category] ?? { emoji: '🔮', label: 'Other', color: '' }
+  const yesPct = Math.round(market.yes_price * 100)
+  const noPct = 100 - yesPct
+  const isClosingSoon = new Date(market.closes_at).getTime() - Date.now() < 86400000 * 2
 
   return (
-    <Link
-      href={`/markets/${market.slug}`}
-      className={cn(
-        'market-card block p-4',
-        featured && 'ring-1 ring-primary/20',
-        compact && 'p-3'
-      )}
-    >
-      {/* Category + Featured badge */}
-      <div className="flex items-center justify-between mb-2">
-        <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', categoryInfo.color)}>
-          {categoryInfo.emoji} {categoryInfo.label}
+    <Link href={`/markets/${market.slug}`} className="market-card group block" aria-label={market.title}>
+      {/* Top row: category + time */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="badge badge-muted gap-1">
+          <span>{cat.emoji}</span>
+          <span>{cat.label}</span>
         </span>
-        {featured && (
-          <span className="text-xs text-primary font-medium">⭐ Featured</span>
-        )}
-        {isClosingSoon && !featured && (
-          <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">⏰ Closing soon</span>
-        )}
+        <span
+          className={`flex items-center gap-1 text-[11px] font-medium ${
+            isClosingSoon ? 'text-amber-light' : ''
+          }`}
+          style={{ color: isClosingSoon ? 'var(--amber)' : 'var(--text-muted)' }}
+        >
+          <IconClock size={11} />
+          {timeLeft(market.closes_at)}
+        </span>
       </div>
 
       {/* Title */}
-      <h3 className={cn(
-        'font-semibold leading-snug line-clamp-2 mb-3',
-        compact ? 'text-sm' : 'text-base'
-      )}>
+      <h3
+        className={`font-semibold leading-snug mb-3 group-hover:text-green-light transition-colors ${
+          compact ? 'text-sm line-clamp-2' : 'text-[15px] line-clamp-3'
+        }`}
+        style={{ color: 'var(--text-primary)' }}
+      >
         {market.title}
       </h3>
 
-      {/* YES / NO prices */}
-      <div className="flex items-center gap-2 mb-2">
-        <span className="price-yes text-sm">
-          YES {yesPercent}%
-        </span>
-        <span className="price-no text-sm">
-          NO {noPercent}%
-        </span>
+      {/* Probability bar + YES/NO chips */}
+      <div className="mb-3">
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-bold price-yes">{yesPct}%</span>
+            <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Yes</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>No</span>
+            <span className="text-xs font-bold price-no">{noPct}%</span>
+          </div>
+        </div>
+        <div className="prob-bar">
+          <div className="prob-bar-fill" style={{ width: `${yesPct}%` }} />
+        </div>
       </div>
 
-      {/* Price bar */}
-      <div className="price-bar mb-3">
-        <div
-          className="price-bar-yes"
-          style={{ width: `${yesPercent}%` }}
-        />
-      </div>
-
-      {/* Stats footer */}
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
+      {/* Bottom row: volume + bettors */}
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            ${market.total_volume_usd >= 1000
-              ? `${(market.total_volume_usd / 1000).toFixed(1)}K`
-              : market.total_volume_usd.toFixed(0)
-            }
+          <span className="flex items-center gap-1 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+            <IconTrendUp size={11} />
+            ${market.total_volume_usd.toLocaleString(undefined, { maximumFractionDigits: 0 })}
           </span>
-          <span className="flex items-center gap-1">
-            <Users className="w-3 h-3" />
-            {market.unique_bettors}
+          <span className="flex items-center gap-1 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+            <IconUser size={11} />
+            {market.unique_bettors.toLocaleString()}
           </span>
         </div>
-        <span className={cn(
-          'flex items-center gap-1',
-          isClosingSoon ? 'text-amber-600 dark:text-amber-400' : ''
-        )}>
-          <Clock className="w-3 h-3" />
-          {market.status === 'resolved' ? 'Resolved' : timeLeft}
-        </span>
+
+        {/* Status badge */}
+        {market.status === 'resolved' ? (
+          <span className="badge badge-muted">Resolved</span>
+        ) : market.status === 'closed' ? (
+          <span className="badge badge-amber">Pending</span>
+        ) : market.is_featured ? (
+          <span className="badge badge-green">Featured</span>
+        ) : null}
       </div>
     </Link>
+  )
+}
+
+// Skeleton loader
+export function MarketCardSkeleton() {
+  return (
+    <div className="card p-4 space-y-3">
+      <div className="flex justify-between">
+        <div className="skeleton h-5 w-20 rounded-full" />
+        <div className="skeleton h-5 w-12 rounded-full" />
+      </div>
+      <div className="skeleton h-4 w-full rounded" />
+      <div className="skeleton h-4 w-3/4 rounded" />
+      <div className="skeleton h-2 w-full rounded-full mt-2" />
+      <div className="flex justify-between mt-2">
+        <div className="skeleton h-4 w-16 rounded" />
+        <div className="skeleton h-4 w-12 rounded" />
+      </div>
+    </div>
   )
 }

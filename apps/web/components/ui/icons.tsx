@@ -1,0 +1,107 @@
+// Hand-crafted SVG icon system — zero external icon libraries
+// Every icon is purpose-built for MarketPips
+
+import React from 'react'
+
+interface IconProps {
+  size?: number
+  className?: string
+  strokeWidth?: number
+}
+
+const icon = (path: React.ReactNode, viewBox = '0 0 24 24') =>
+  function Icon({ size = 16, className = '', strokeWidth = 1.75 }: IconProps) {
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox={viewBox}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={className}
+        aria-hidden="true"
+      >
+        {path}
+      </svg>
+    )
+  }
+
+// Navigation
+export const IconHome = icon(<><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></>)
+export const IconMarkets = icon(<><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 9h20M9 21V9"/></>)
+export const IconSearch = icon(<><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></>)
+export const IconBell = icon(<><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></>)
+export const IconUser = icon(<><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></>)
+export const IconMenu = icon(<><path d="M3 6h18M3 12h18M3 18h18"/></>)
+export const IconX = icon(<><path d="M18 6L6 18M6 6l12 12"/></>)
+export const IconChevronDown = icon(<><path d="M6 9l6 6 6-6"/></>)
+export const IconChevronRight = icon(<><path d="M9 6l6 6-6 6"/></>)
+export const IconChevronLeft = icon(<><path d="M15 6l-6 6 6 6"/></>)
+export const IconArrowUp = icon(<><path d="M12 19V5M5 12l7-7 7 7"/></>)
+export const IconArrowDown = icon(<><path d="M12 5v14M19 12l-7 7-7-7"/></>)
+export const IconArrowRight = icon(<><path d="M5 12h14M12 5l7 7-7 7"/></>)
+export const IconExternalLink = icon(<><path d="M18 13v6a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h6M15 3h6v6M10 14L21 3"/></>)
+
+// Finance
+export const IconWallet = icon(<><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><circle cx="16" cy="14" r="1.5" fill="currentColor" stroke="none"/></>)
+export const IconDeposit = icon(<><rect x="2" y="5" width="20" height="16" rx="2"/><path d="M2 10h20M12 15v-3M10 14l2 2 2-2"/></>)
+export const IconWithdraw = icon(<><rect x="2" y="5" width="20" height="16" rx="2"/><path d="M2 10h20M12 12v3M10 13l2-2 2 2"/></>)
+export const IconTrendUp = icon(<><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>)
+export const IconTrendDown = icon(<><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></>)
+export const IconDollar = icon(<><path d="M12 2v20M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6"/></>)
+export const IconCoin = icon(<><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3 3 0 10-3 5.2M9.5 15a3 3 0 103-5.2"/></>)
+export const IconPercent = icon(<><path d="M19 5L5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></>)
+export const IconSwap = icon(<><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></>)
+
+// Market / Categories
+export const IconPolitics = icon(<><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></>)
+export const IconSports = icon(<><circle cx="12" cy="12" r="9"/><path d="M12 3a14.5 14.5 0 010 18M3 9h18M3 15h18"/></>)
+export const IconEconomics = icon(<><path d="M3 3v18h18"/><path d="M18 12l-5-5-4 4-3-3"/></>)
+export const IconCrypto = icon(<><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 5.4m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/></>)
+export const IconWeather = icon(<><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></>)
+export const IconTech = icon(<><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></>)
+export const IconElections = icon(<><path d="M2 20h20M4 20V10l8-7 8 7v10"/><path d="M10 20v-5a2 2 0 014 0v5"/></>)
+export const IconBusiness = icon(<><rect x="2" y="7" width="20" height="15" rx="1"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2M12 12v5M9.5 12h5"/></>)
+export const IconHealth = icon(<><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></>)
+export const IconGlobe = icon(<><circle cx="12" cy="12" r="9"/><path d="M12 3a14.5 14.5 0 010 18M3 9h18M3 15h18"/></>)
+export const IconFire = icon(<><path d="M12 22c5.523 0 10-4.477 10-10 0-3-1.5-6-4-8-1 2-2 3-4 3-1 0-2-1-2-2s-1-2-2-2C5 3 2 7.477 2 12c0 5.523 4.477 10 10 10z"/><path d="M12 22c1.657 0 3-2.686 3-6s-1.343-6-3-6-3 2.686-3 6 1.343 6 3 6z"/></>)
+export const IconStar = icon(<><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></>)
+export const IconTrophy = icon(<><path d="M6 9H4a2 2 0 010-4h2M18 9h2a2 2 0 000-4h-2"/><path d="M4 5h16v7a8 8 0 01-16 0V5z"/><path d="M12 19v3M8 22h8"/></>)
+
+// UI Actions
+export const IconShare = icon(<><circle cx="18" cy="5" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="18" cy="19" r="2"/><path d="M8 12h8M8.59 6.59L15.42 9.4M15.41 14.59l-6.82 2.82"/></>)
+export const IconCopy = icon(<><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></>)
+export const IconCheck = icon(<><polyline points="20 6 9 17 4 12"/></>)
+export const IconInfo = icon(<><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></>)
+export const IconWarning = icon(<><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></>)
+export const IconSettings = icon(<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></>)
+export const IconLogOut = icon(<><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></>)
+export const IconFilter = icon(<><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></>)
+export const IconClock = icon(<><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></>)
+export const IconCalendar = icon(<><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></>)
+export const IconPlus = icon(<><path d="M12 5v14M5 12h14"/></>)
+export const IconMinus = icon(<><path d="M5 12h14"/></>)
+export const IconRefresh = icon(<><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></>)
+export const IconEye = icon(<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>)
+export const IconShield = icon(<><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></>)
+export const IconKYC = icon(<><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="10" r="3"/><path d="M15 8h4M15 12h4M5 17c0-2 2-4 4-4h4c2 0 4 2 4 4"/></>)
+export const IconMpesa = icon(<><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8M12 8v8"/></>, '0 0 24 24')
+export const IconPhone = icon(<><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 17h.01"/></>)
+export const IconMail = icon(<><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></>)
+export const IconPortfolio = icon(<><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></>)
+export const IconLeaderboard = icon(<><path d="M8 21V11M12 21V3M16 21V15"/><path d="M4 21h16"/></>)
+export const IconComments = icon(<><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></>)
+export const IconSell = icon(<><circle cx="12" cy="12" r="9"/><path d="M9 15l6-6M15 9h-4M15 9v4" stroke="currentColor"/></>)
+
+// Logo mark
+export const LogoMark = ({ size = 28, className = '' }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={className}>
+    <rect width="32" height="32" rx="8" fill="#16a34a"/>
+    <path d="M6 24L12 14l4 6 4-8 6 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <circle cx="6" cy="24" r="2" fill="white"/>
+    <circle cx="26" cy="24" r="2" fill="white"/>
+  </svg>
+)

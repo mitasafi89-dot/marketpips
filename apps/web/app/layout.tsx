@@ -1,11 +1,8 @@
-// app/layout.tsx - Root layout
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
-import { Toaster } from 'react-hot-toast'
 import './globals.css'
-import { ThemeProvider } from '@/components/layout/theme-provider'
-import { QueryProvider } from '@/components/layout/query-provider'
 import { Navbar } from '@/components/layout/navbar'
+import { Providers } from '@/components/layout/providers'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -14,108 +11,54 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'),
   title: {
-    default: 'MarketPips — East Africa\'s Prediction Market',
-    template: '%s | MarketPips',
+    default: 'MarketPips — East Africa Prediction Markets',
+    template: '%s · MarketPips',
   },
-  description:
-    'Trade on real-world events in East Africa. Predict outcomes in politics, sports, economics, and more. Powered by M-Pesa, MTN MoMo, and Airtel Money.',
-  keywords: [
-    'prediction market',
-    'east africa',
-    'kenya',
-    'uganda',
-    'tanzania',
-    'rwanda',
-    'betting',
-    'forecasting',
-    'm-pesa',
-    'mtn momo',
-  ],
-  authors: [{ name: 'MarketPips Team' }],
+  description: 'Trade on real-world outcomes. Pay with M-Pesa, MTN MoMo, and Airtel Money. Built for East Africa.',
+  keywords: ['prediction market', 'M-Pesa', 'Kenya', 'East Africa', 'sports betting', 'elections', 'crypto'],
+  authors: [{ name: 'MarketPips' }],
   creator: 'MarketPips',
   openGraph: {
     type: 'website',
-    locale: 'en_KE',
-    url: process.env.NEXT_PUBLIC_APP_URL,
-    title: 'MarketPips — East Africa\'s Prediction Market',
-    description: 'Trade on real-world events. Predict what happens next.',
+    locale: 'en_US',
+    url: process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
     siteName: 'MarketPips',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'MarketPips - East Africa Prediction Market',
-      },
-    ],
+    title: 'MarketPips — Predict the Future, Get Paid',
+    description: 'East Africa\'s premier prediction market. Trade on elections, sports, crypto. Pay with M-Pesa.',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'MarketPips' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MarketPips — East Africa\'s Prediction Market',
-    description: 'Trade on real-world events. Predict what happens next.',
+    title: 'MarketPips',
+    description: 'East Africa\'s premier prediction market',
     images: ['/og-image.png'],
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/icon-192.png',
+  },
 }
 
 export const viewport: Viewport = {
-  themeColor: '#22c55e',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
+  themeColor: '#16a34a',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <QueryProvider>
-            <Navbar />
-            <main className="min-h-screen">
-              {children}
-            </main>
-            <Toaster
-              position="bottom-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#1a1a1a',
-                  color: '#fff',
-                  border: '1px solid #333',
-                  borderRadius: '12px',
-                },
-                success: {
-                  iconTheme: {
-                    primary: '#22c55e',
-                    secondary: '#fff',
-                  },
-                },
-                error: {
-                  iconTheme: {
-                    primary: '#ef4444',
-                    secondary: '#fff',
-                  },
-                },
-              }}
-            />
-          </QueryProvider>
-        </ThemeProvider>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className={`${inter.variable} antialiased`}>
+        <Providers>
+          <Navbar />
+          <main>{children}</main>
+        </Providers>
       </body>
     </html>
   )
