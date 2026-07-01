@@ -132,17 +132,46 @@ Legend: ☐ todo · ◐ in progress · ☑ done
   reserve 200 → fail refunds to 900, 2nd call already_processed · insufficient
   balance → P0006 · generated net_amount = 99 · zero leaked rows.
 
-### Module 8 — KYC  ☐
-- Private bucket upload, admin review (`admin_review_kyc`).
-- **Gate:** upload → pending → admin verify → status flips.
+> **Reprioritized (execution order):** Modules **8 — KYC** and **9 —
+> Notifications** have been deferred to the **end** of the sequence. Module
+> numbers are kept as stable identifiers (git branches / migrations reference
+> them), but they now run last: **Notifications is second-to-last and KYC is
+> last** — see their blocks at the bottom of this file. Both have clean
+> deferred hooks already in place (M7 withdrawals leaves a KYC gate stub;
+> `lib/notifications/*` and `admin_review_kyc()`/notification rows already
+> exist). The revised order is therefore: **10 → 11 → 12 → 13 → 14 → 15 → 16
+> → 17 → 9 (Notifications) → 8 (KYC)**.
 
-### Module 9 — Notifications  ☐
-- In-app + SMS (Africa's Talking) + email (Resend); send-notifications cron.
-- **Gate:** event → notification row → dispatch (mocked providers).
-
-### Module 10 — Search & leaderboard  ☐
-- Full-text market search; leaderboard matview + refresh.
-- **Gate:** search relevance test; leaderboard ranking test.
+### Module 10 — Search & leaderboard  ☑
+- Production full-text market search (migration 007): weighted **STORED**
+  `search_vector` generated column (title=A, tags=B, description=C) via an
+  IMMUTABLE `markets_tsv()` wrapper (works around the non-immutable
+  `text→regconfig` cast), GIN index + `pg_trgm` **word-similarity** trigram
+  index on title for typo-tolerant fuzzy fallback, and composite
+  status+sort btree indexes. `search_markets()` RPC: `ts_rank_cd` relevance
+  (title-weighted) blended with `word_similarity`, `websearch_to_tsquery`
+  parsing, category/status filters, deterministic multi-key sort
+  (relevance|volume|newest|closing|bettors), server-side pagination, and a
+  single `jsonb {data,total,limit,offset,sort,query}` payload. Draft/pending
+  never leak (SECURITY DEFINER pins the visible statuses). ✓
+- Hardened `leaderboard` **materialized view**: deterministic RANK() over all
+  three metrics (volume / win-rate / P&L) with id tie-breaks; unique index
+  for `REFRESH … CONCURRENTLY`; `refresh_leaderboard()` with a first-populate
+  fallback. `get_leaderboard(metric, period, limit)` RPC — all-time reads the
+  matview; rolling **week/month** windows aggregate from `transactions`. ✓
+- API: `/api/search` rewritten onto the RPC (Zod-free bounded validation via
+  `lib/search`); new `/api/leaderboard` route. Frontend: search page gains
+  relevance sort + status filter + match highlighting + abortable fetch;
+  leaderboard page rebuilt as a functional client component with working
+  metric & period tabs, podium, and a11y roles. Pure cores in `lib/search.ts`
+  / `lib/leaderboard.ts`. ✓
+- **Gate:** ✓ DB-live (rolled back, `session_replication_role=replica` seed):
+  **search relevance** — title match ranks above description-only match,
+  category/status filters, fuzzy typo (`electon`→election), volume sort &
+  pagination total all asserted. **Leaderboard ranking** — matview
+  volume/winrate/pnl ranks + `get_leaderboard` week aggregation, ordering &
+  win-rate computation all asserted. 154/154 unit tests (+19 search, +13
+  leaderboard) · tsc clean · lint · `next build`.
 
 ### Module 11 — Admin  ☐
 - Dashboard: market review/resolution, KYC, audit log, users.
@@ -173,6 +202,18 @@ Legend: ☐ todo · ◐ in progress · ☑ done
 ### Module 17 — Accessibility, i18n, docs, launch  ☐
 - a11y pass, EA localization scaffolding, full docs, runbook, DR/backup.
 - **Gate:** a11y audit; restore-from-backup drill documented.
+
+---
+
+## Deferred tail (run after Module 17)
+
+### Module 9 — Notifications  ☐  *(second-to-last)*
+- In-app + SMS (Africa's Talking) + email (Resend); send-notifications cron.
+- **Gate:** event → notification row → dispatch (mocked providers).
+
+### Module 8 — KYC  ☐  *(last)*
+- Private bucket upload, admin review (`admin_review_kyc`).
+- **Gate:** upload → pending → admin verify → status flips.
 
 ---
 

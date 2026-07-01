@@ -1374,6 +1374,25 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      search_markets: {
+        Args: {
+          p_query?: string | null
+          p_category?: string | null
+          p_status?: string | null
+          p_sort?: string | null
+          p_limit?: number | null
+          p_offset?: number | null
+        }
+        Returns: Json
+      }
+      get_leaderboard: {
+        Args: {
+          p_metric?: string | null
+          p_period?: string | null
+          p_limit?: number | null
+        }
+        Returns: Json
+      }
       resolve_market: {
         Args: {
           p_market_id: string
