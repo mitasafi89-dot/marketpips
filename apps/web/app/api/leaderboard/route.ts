@@ -1,0 +1,37 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { parseLeaderboardParams, type LeaderboardEntry } from '@/lib/leaderboard'
+
+// Leaderboard reflects live standings; render dynamically.
+export const dynamic = 'force-dynamic'
+
+/**
+ * GET /api/leaderboard
+ * Ranked traders by metric (volume|winrate|pnl) and period (all|week|month).
+ * All-time reads the `leaderboard` materialized view; week/month aggregate
+ * from transactions via the `get_leaderboard` RPC.
+ */
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+  const { metric, period, limit } = parseLeaderboardParams(searchParams)
+
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc('get_leaderboard', {
+    p_metric: metric,
+    p_period: period,
+    p_limit: limit,
+  })
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  const payload = (data ?? {}) as { data?: LeaderboardEntry[] }
+  const rows = Array.isArray(payload.data) ? payload.data : []
+
+  return NextResponse.json(
+    { data: rows, metric, period, count: rows.length },
+    { headers: { 'Cache-Control': 'no-store' } }
+  )
+}
