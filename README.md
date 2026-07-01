@@ -30,7 +30,7 @@ marketpips/
 │       │   ├── leaderboard/        # Top traders leaderboard
 │       │   ├── search/             # Full-text market search
 │       │   ├── kyc/                # Identity verification upload
-│       │   ├── admin/              # Admin dashboard
+│       │   ├── admin/              # Admin control plane (spec: docs/08-ADMIN.md)
 │       │   └── api/
 │       │       ├── orders/         # Place bets (LMSR pricing)
 │       │       ├── markets/        # CRUD markets + resolve
@@ -306,6 +306,7 @@ $100K/month volume → ~$1,750/month platform revenue.
 - [x] Resend email integration
 
 ### v2.0 (Planned)
+- [ ] Comprehensive admin control plane ([spec: docs/08-ADMIN.md](docs/08-ADMIN.md)) — full user/creator/marketer management, DB-backed payment gateway settings (paybill & keys editable from the UI), finance console, system settings, moderation & audit
 - [ ] Multiple choice markets (3+ outcomes)
 - [ ] KYC admin review dashboard
 - [ ] Mobile app (React Native / Expo)
@@ -314,6 +315,21 @@ $100K/month volume → ~$1,750/month platform revenue.
 - [ ] Automated resolution oracles (Chainlink)
 - [ ] Limit orders (order book)
 - [ ] PesaPal USSD for Ethiopia
+
+---
+
+## 📚 Documentation
+
+| Doc | Description |
+|---|---|
+| [`docs/00-ASSESSMENT.md`](docs/00-ASSESSMENT.md) | Initial assessment |
+| [`docs/01-ARCHITECTURE.md`](docs/01-ARCHITECTURE.md) | System architecture, stack, trust boundaries |
+| [`docs/03-ROADMAP.md`](docs/03-ROADMAP.md) | Module-by-module build roadmap |
+| [`docs/04-FLOWS.md`](docs/04-FLOWS.md) | Core user & payment flows |
+| [`docs/05-CURRENCY.md`](docs/05-CURRENCY.md) | Multi-currency & FX model |
+| [`docs/06-MARKETS.md`](docs/06-MARKETS.md) | Markets & LMSR lifecycle |
+| [`docs/07-TRADING.md`](docs/07-TRADING.md) | Orders, positions & fee economics |
+| [`docs/08-ADMIN.md`](docs/08-ADMIN.md) | **Admin control plane** — users, creators, marketers, payment gateway settings, finance, system settings, moderation & audit |
 
 ---
 

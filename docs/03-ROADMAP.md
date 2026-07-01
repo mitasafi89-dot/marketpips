@@ -173,9 +173,23 @@ Legend: ☐ todo · ◐ in progress · ☑ done
   win-rate computation all asserted. 154/154 unit tests (+19 search, +13
   leaderboard) · tsc clean · lint · `next build`.
 
-### Module 11 — Admin  ☐
-- Dashboard: market review/resolution, KYC, audit log, users.
-- **Gate:** RBAC-enforced; resolution flows to payout.
+### Module 11 — Admin (control plane)  ☐
+- **Full spec: [`08-ADMIN.md`](08-ADMIN.md).** Replaces the current thin
+  placeholder page with a comprehensive, capability-gated control plane.
+- Scope: role/permission model (adds `creator`, `marketer`, `support`,
+  `finance`, `superadmin`); user management (all system users) incl. KYC,
+  roles, suspend, audited impersonation, balance adjustment; **creator** and
+  **marketer** consoles (tiers, commission plans, campaigns, payout runs);
+  market review/resolution/cancel/disputes; finance console
+  (deposits/withdrawals/ledger/reconciliation); **DB-backed, encrypted payment
+  gateway settings — paybill/shortcode/keys/passkeys/callbacks, enable/disable,
+  sandbox↔production, live test, secret rotation, all from the UI with no
+  redeploy**; system settings (fees, limits, currencies/FX, feature flags,
+  maintenance); content moderation; announcements; audit & security console.
+- Delivered in phases A–F (see 08-ADMIN.md §8).
+- **Gate:** capability-enforced at middleware + server guard + RLS; no dead
+  links; resolution flows to payout; gateways editable from UI with secrets
+  never exposed; everything audited; tests green + tsc clean + build.
 
 ### Module 12 — Background jobs  ☐
 - close-markets, update-exchange-rates, resolve-market, send-notifications.
